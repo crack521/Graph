@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Trains
 {
-    class Program
+    public class RoutePlanner
     {
         private const string Greeting = "Welcome to the Kiwiland Railroad route planner.\nPlease enter your route.";
         private const string ShortestRoute = "s";
@@ -32,7 +32,7 @@ namespace Trains
         /// </summary>
         /// <param name="args">command line arguments</param>
         /// <returns>string array with the start town, end town, and distance between them at each index or null if there was an error</returns>
-        private static string[] parseArgs(string[] args)
+        public static string[] parseArgs(string[] args)
         {
             if (verifyArgCount(args) == 0) return null;
 
@@ -58,7 +58,7 @@ namespace Trains
         /// </summary>
         /// <param name="args">command line arguments</param>
         /// <returns>1 if one argument was passed, returns 0 if the number was not one.</returns>
-        private static int verifyArgCount(string[] args)
+        public static int verifyArgCount(string[] args)
         {
             if (args.Length != 1)
             {
@@ -74,7 +74,7 @@ namespace Trains
         /// </summary>
         /// <param name="allPaths">all train paths as parsed in from the command line arg</param>
         /// <returns>adjacency matrix for all town to town route's distances or null if there was an error</returns>
-        private static int[,] buildRoutesAdjacencyMatrix(string[] allPaths)
+        public static int[,] buildRoutesAdjacencyMatrix(string[] allPaths)
         {
             int[,] routeMatrix = new int[TotalNumberOfTowns, TotalNumberOfTowns]; //Assumes there are a max of five towns, per the problem prompt.
             string currPath;
@@ -121,7 +121,7 @@ namespace Trains
         /// </summary>
         /// <param name="x">the town char to be converted</param>
         /// <returns>the town's int conversion or -1 if not recognized</returns>
-        private static int townCharToInt(char x)
+        public static int townCharToInt(char x)
         {
             if (x == 'A' || x == 'a') return 0;
             else if (x == 'B' || x == 'b') return 1;
@@ -141,7 +141,7 @@ namespace Trains
         /// </summary>
         /// <param name="routeMatrix">adjacency matrix containing route and weight data</param>
         /// <returns>array of all train routes</returns>
-        private static List<TrainRoute> findAllTrainRoutes(int[,] routeMatrix)
+        public static List<TrainRoute> findAllTrainRoutes(int[,] routeMatrix)
         {
             List<TrainRoute> allTrainRoutes = new List<TrainRoute>();
             int[] hasTownBeenSeen;
@@ -169,7 +169,7 @@ namespace Trains
         /// <param name="routeDistance">total length of current route</param>
         /// <param name="allStops">array of all towns along the current route</param>
         /// <returns>the list of all the train routes</returns>
-        private static List<TrainRoute> findAllPathsFromStartTown(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int startingTown, int currentTown, int[] hasTownBeenSeen, int routeDistance, string allStops)
+        public static List<TrainRoute> findAllPathsFromStartTown(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int startingTown, int currentTown, int[] hasTownBeenSeen, int routeDistance, string allStops)
         {
             for (int i = currentTown; i < TotalNumberOfTowns; i++)
             {
@@ -198,7 +198,7 @@ namespace Trains
         /// </summary>
         /// <param name="x">int representation of the town</param>
         /// <returns>char representation of the town as a letter or '0' if there was an error</returns>
-        private static char townIntToChar(int x){
+        public static char townIntToChar(int x){
             if (x == 0) return 'A';
             else if (x == 1) return 'B';
             else if (x == 2) return 'C';
@@ -215,7 +215,7 @@ namespace Trains
         /// Parses the user input for what kind of information they want to have the program return.
         /// </summary>
         /// <param name="userInput">user's console input</param>
-        private static void parseUserInput(string userInput)
+        public static void parseUserInput(string userInput)
         {
             if (userInput.Contains(ShortestRoute.ToLower()))
             {
