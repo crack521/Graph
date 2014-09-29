@@ -42,7 +42,9 @@ namespace Trains
                 {
                     String allRoutes = sr.ReadToEnd();
                     char[] delimiterChars = { ' ', ',' };
-                    return allRoutes.Split(delimiterChars);
+                    string[] allRoutesStrings = allRoutes.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
+                    if (allRoutesStrings.Length == 0) return null;
+                    return allRoutesStrings;
                 }
             }
             catch (Exception e)
@@ -60,7 +62,7 @@ namespace Trains
         /// <returns>1 if one argument was passed, returns 0 if the number was not one.</returns>
         public static int verifyArgCount(string[] args)
         {
-            if (args.Length != 1)
+            if (args == null || args.Length != 1)
             {
                 Console.WriteLine("Error: Run this program with a command line argument of a text file with the rail lines.");
                 return 0;
@@ -76,6 +78,7 @@ namespace Trains
         /// <returns>adjacency matrix for all town to town route's distances or null if there was an error</returns>
         public static int[,] buildRoutesAdjacencyMatrix(string[] allPaths)
         {
+            if (allPaths == null) return null;
             int[,] routeMatrix = new int[TotalNumberOfTowns, TotalNumberOfTowns]; //Assumes there are a max of five towns, per the problem prompt.
             string currPath;
             int startTown;
@@ -204,7 +207,7 @@ namespace Trains
             else if (x == 2) return 'C';
             else if (x == 3) return 'D';
             else if (x == 4) return 'E';
-            else //should not hit this case because of previous char value checking in townCharToInt()
+            else //should not hit this case because of previous char value checking in townCharToInt() when program runs
             {
                 Console.WriteLine("Error: A town index was not recognized.");
                 return '0';
