@@ -19,10 +19,12 @@ namespace Trains
         private char[] allStops;
         private int distance;
 
-        public TrainRoute(char[] route, int distance)
+        public TrainRoute(char[] allStops, int distance, char start, char end)
         {
-            this.allStops = route;
+            this.allStops = allStops;
             this.distance = distance;
+            this.start = start;
+            this.end = end;
         }
 
         public char getStart()
@@ -30,21 +32,12 @@ namespace Trains
             return this.start;
         }
 
-        public void setStart(char start)
-        {
-            this.start = start;
-        }
-
         public char getEnd()
         {
             return this.end;
         }
 
-        public void setEnd(char end){
-            this.end = end;
-        }
-
-        public char[] getRoute()
+        public char[] getAllStops()
         {
             return this.allStops;
         }
@@ -52,6 +45,17 @@ namespace Trains
         public int getDistance()
         {
             return this.distance;
+        }
+
+        public string toString()
+        {
+            string info = "starting town: " + this.start + " | ending town: " + this.end + " | all stops on route: ";
+            for (int i = 0; i < allStops.Length; i++)
+            {
+                info += allStops[i];
+            }
+            info += " | total distance: " + this.distance;
+            return info;
         }
     }
 }
