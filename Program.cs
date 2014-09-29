@@ -19,7 +19,7 @@ namespace Trains
             string[] allPaths = parseArgs(args);
             int[,] routeMatrix = buildRoutesAdjacencyMatrix(allPaths);
             if (routeMatrix == null) return;
-            findAllTrainRoutes(); //TODO: find all paths
+            TrainRoute[] allRoutes = findAllTrainRoutes(routeMatrix); 
 
             Console.WriteLine(Greeting);
             string userInput = Console.ReadLine();
@@ -71,7 +71,8 @@ namespace Trains
         /// Builds an adjacency matrix of all train routes. Rows are start towns, columns are end towns.
         /// Assumes there are a max of five towns, per the problem prompt.
         /// </summary>
-        /// <param name="?">all train paths as parsed in from the command line arg</param>
+        /// <param name="allPaths">all train paths as parsed in from the command line arg</param>
+        /// <returns>adjacency matrix for all town to town route's distances</returns>
         private static int[,] buildRoutesAdjacencyMatrix(string[] allPaths)
         {
             int[,] routeMatrix = new int[5, 5]; //Assumes there are a max of five towns, per the problem prompt.
@@ -109,6 +110,11 @@ namespace Trains
             return routeMatrix;
         }
 
+        /// <summary>
+        /// Converts a char representing a town to an int
+        /// </summary>
+        /// <param name="x">the town char to be converted</param>
+        /// <returns>the town's int conversion</returns>
         private static int charToInt(char x)
         {
             if (x == 'A' || x == 'a') return 0;
@@ -123,9 +129,18 @@ namespace Trains
             }
         }
 
-        private static void findAllTrainRoutes()
+        /// <summary>
+        /// Constructs an array of all train routes. Each route contains no more than one cycle
+        /// (max one repeat of only one town).
+        /// </summary>
+        /// <param name="routeMatrix">adjacency matrix containing route and weight data</param>
+        /// <returns>array of all train routes</returns>
+        private static TrainRoute[] findAllTrainRoutes(int[,] routeMatrix)
         {
+            TrainRoute[] allRoutes = new TrainRoute[10];
 
+            //TODO: finish writing this method
+            return allRoutes;
         }
 
         /// <summary>
