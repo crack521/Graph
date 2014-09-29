@@ -12,7 +12,7 @@ namespace Trains
     /// array of all cities along the route, and distance is the sum of all path 
     /// weights (distances between cities) along the route.
     /// </summary>
-    class TrainRoute
+    public class TrainRoute
     {
         private char start;
         private char end;
