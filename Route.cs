@@ -12,19 +12,28 @@ namespace Trains
     /// array of all cities along the route, and distance is the sum of all path 
     /// weights (distances between cities) along the route.
     /// </summary>
-    public class TrainRoute
+    public class TrainRoute : IEquatable<TrainRoute>
     {
         private char start;
         private char end;
-        private char[] allStops;
+        private List<char> allStops;
         private int distance;
 
-        public TrainRoute(char[] allStops, int distance, char start, char end)
+        public TrainRoute(List<char> allStops, int distance, char start, char end)
         {
             this.allStops = allStops;
             this.distance = distance;
             this.start = start;
             this.end = end;
+        }
+
+        public TrainRoute(List<char> allStops, int distance)
+        {
+            //better to use this constructor; less likely to have data mismatch mistakes
+            this.allStops = allStops;
+            this.distance = distance;
+            this.start = allStops[0];
+            this.end = allStops[allStops.Count-1];
         }
 
         public char getStart()
@@ -37,7 +46,7 @@ namespace Trains
             return this.end;
         }
 
-        public char[] getAllStops()
+        public List<char> getAllStops()
         {
             return this.allStops;
         }
@@ -50,12 +59,55 @@ namespace Trains
         public string toString()
         {
             string info = "starting town: " + this.start + " | ending town: " + this.end + " | all stops on route: ";
-            for (int i = 0; i < allStops.Length; i++)
+            for (int i = 0; i < allStops.Count; i++)
             {
                 info += allStops[i];
             }
             info += " | total distance: " + this.distance;
             return info;
+        }
+
+        public bool Equals(TrainRoute other)
+        {
+            if (other == null)
+                return false;
+            if(this.distance != other.getDistance())
+                return false;
+            for (int i = 0; i < this.getAllStops().Count; i++)
+            {
+                if(this.allStops[i] != other.allStops[i])
+                    return false;
+            }
+            return true;
+        }
+
+        public override bool Equals(Object obj)
+        {
+            if (obj == null)
+                return false;
+
+            TrainRoute route = obj as TrainRoute;
+            if (route == null)
+                return false;
+            else
+                return Equals(route);
+        }   
+
+
+        public static bool operator ==(TrainRoute route1, TrainRoute route2)
+        {
+            if ((object)route1 == null || ((object)route2) == null)
+                return Object.Equals(route1, route2);
+
+            return route1.Equals(route2);
+        }
+
+        public static bool operator !=(TrainRoute route1, TrainRoute route2)
+        {
+            if (route1 == null || route2 == null)
+                return !Object.Equals(route1, route2);
+
+            return !(route1.Equals(route2));
         }
     }
 }
