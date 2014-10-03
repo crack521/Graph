@@ -180,7 +180,52 @@ namespace TrainTests
         [TestMethod]
         public void RoutePlanner_ParseUserInput() //string userInput, ref List<char> inputTowns, ref int numberUserPasses)
         {
+            string userInput = "A-C x -6"; //find all routes between A and C with exactly 6 stops
+            List<char> inputTowns = new List<char>();
+            int numberUserPasses = 0;
+            char desiredOutput = RoutePlanner.parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
+            Assert.AreEqual('x', desiredOutput);
+            Assert.AreEqual('A', inputTowns[0]);
+            Assert.AreEqual('C', inputTowns[1]);
+            Assert.AreEqual(6, numberUserPasses); //should ignore negative
 
+            userInput = "B-E m 15"; //find all routes between B and E with 15 or fewer stops
+            numberUserPasses = 0;
+            inputTowns.Clear();
+            desiredOutput = RoutePlanner.parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
+            Assert.AreEqual('m', desiredOutput);
+            Assert.AreEqual('B', inputTowns[0]);
+            Assert.AreEqual('E', inputTowns[1]);
+            Assert.AreEqual(15, numberUserPasses);
+
+            userInput = "B-D l 300"; //find all routes between B and D where distance is less than 300
+            numberUserPasses = 0;
+            inputTowns.Clear();
+            desiredOutput = RoutePlanner.parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
+            Assert.AreEqual('l', desiredOutput);
+            Assert.AreEqual('B', inputTowns[0]);
+            Assert.AreEqual('D', inputTowns[1]);
+            Assert.AreEqual(300, numberUserPasses);
+
+            userInput = "E-A s 7"; //
+            numberUserPasses = 0;
+            inputTowns.Clear();
+            desiredOutput = RoutePlanner.parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
+            Assert.AreEqual('s', desiredOutput);
+            Assert.AreEqual('E', inputTowns[0]);
+            Assert.AreEqual('A', inputTowns[1]);
+            Assert.AreEqual(7, numberUserPasses);
+
+            userInput = "B-E-A-D p"; //
+            numberUserPasses = 0;
+            inputTowns.Clear();
+            desiredOutput = RoutePlanner.parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
+            Assert.AreEqual('p', desiredOutput);
+            Assert.AreEqual('B', inputTowns[0]);
+            Assert.AreEqual('E', inputTowns[1]);
+            Assert.AreEqual('A', inputTowns[2]);
+            Assert.AreEqual('D', inputTowns[3]);
+            Assert.AreEqual(0, numberUserPasses);
         }
 
         [TestMethod]
