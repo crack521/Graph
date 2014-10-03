@@ -3,28 +3,59 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Trains
 {
     public class RoutePlanner
     {
-        private const string Greeting = "Welcome to the Kiwiland Railroad route planner.\nPlease enter your route.";
+        private const string Greeting = "Welcome to the railroad route planner.\nPlease enter your route.";
         private const string ShortestRoute = "s";
-        private const string DistanceLessThan = "d";
+        private const string DistanceLessThan = "l";
         private const string MaxNumberStops = "m";
         private const string ExactNumberStops = "x";
+        private const char ExactPath = 'p';
         private const int TotalNumberOfTowns = 5;
         static void Main(string[] args)
         {
             string[] allPaths = parseArgs(args);
             int[,] routeMatrix = buildRoutesAdjacencyMatrix(allPaths);
             if (routeMatrix == null) return;
-            List<TrainRoute> allRoutes = findAllTrainRoutes(routeMatrix); 
 
             Console.WriteLine(Greeting);
-            string userInput = Console.ReadLine();
-            parseUserInput(userInput); //TODO: finish writing this method
+            string userInput;
+            List<char> inputTowns = new List<char>();
+            char typeOfOutputToGive; //char representing 1/5 output types
+            int numberUserPasses = 0;
+
+            while (true)
+            {
+                inputTowns.Clear();
+                numberUserPasses = 0;
+                userInput = Console.ReadLine();
+                typeOfOutputToGive = parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
+                char[] townsAsChars = inputTowns.ToArray();
+                int[] townsAsInts = new int[townsAsChars.Length];
+                for (int i = 0; i < townsAsChars.Length; i++)
+                {
+                    townsAsInts[i] = townCharToInt(townsAsChars[i]);
+                } //builds an int array of all the towns user specifies to be used for indecies in the adj. matrix
+
+                if (typeOfOutputToGive.ToString() == ExactNumberStops){
+                    findAllTrainRoutes(routeMatrix, inputTowns[0], inputTowns[inputTowns.Count - 1], stopsEqTo: numberUserPasses); 
+                } else if (typeOfOutputToGive.ToString() == MaxNumberStops){
+                    findAllTrainRoutes(routeMatrix, inputTowns[0], inputTowns[inputTowns.Count - 1], stopsLessEqTo: numberUserPasses); 
+                } else if (typeOfOutputToGive.ToString() == DistanceLessThan){
+                    findAllTrainRoutes(routeMatrix, inputTowns[0], inputTowns[inputTowns.Count - 1], distLessThan: numberUserPasses); 
+                } else if (typeOfOutputToGive.ToString() == ShortestRoute){
+                    findAllTrainDists(routeMatrix, twoTowns: townsAsInts); 
+                } else if (typeOfOutputToGive == ExactPath){
+                    findAllTrainDists(routeMatrix, exactPath: townsAsInts); 
+                }
+
+                //TODO: do console print of info user wants
+            }
         }
 
         /// <summary>
@@ -139,61 +170,209 @@ namespace Trains
         }
 
         /// <summary>
-        /// Constructs an array of all train routes. Each route contains no more than one cycle
-        /// (max one repeat of only one town).
+        /// Constructs an array of TrainRoute objects representing routes that fit the criteria given by the user input.
+        /// 
+        /// Set a value for either distLessThan, stopsEqTo, or stopsLessEqTo based on user input of what
+        /// kind of search should be performed.
         /// </summary>
-        /// <param name="routeMatrix">adjacency matrix containing route and weight data</param>
-        /// <returns>array of all train routes</returns>
-        public static List<TrainRoute> findAllTrainRoutes(int[,] routeMatrix)
+        /// <param name="routeMatrix">adjacency matrix of train routes and weights</param>
+        /// <param name="startTown">starting town (node) from user input</param>
+        /// <param name="endTown">target end town from user input</param>
+        /// <param name="distLessThan">total distance that all routes should be less than, from user input</param>
+        /// <param name="stopsEqTo">total number of stops routes should have, from user input</param>
+        /// <param name="stopsLessEqTo">total number of stops route should have less than or be equal to, from user input</param>
+        /// <returns>returns a List of all eligible train routes based on user input</returns>
+        public static List<TrainRoute> findAllTrainRoutes(int[,] routeMatrix, int startTown, int endTown, int distLessThan = -1, int stopsEqTo = -1, int stopsLessEqTo = -1)
         {
             List<TrainRoute> allTrainRoutes = new List<TrainRoute>();
-            int[] hasTownBeenSeen;
-            int routeDistance;
-            string allStops;
-            for (int i = 0; i < TotalNumberOfTowns; i++) //traverse all start towns (rows)
-            {
-                hasTownBeenSeen = new int[TotalNumberOfTowns];
-                routeDistance = 0;
-                allStops = null;
-                findAllPathsFromStartTown(routeMatrix, ref allTrainRoutes, i, 0, hasTownBeenSeen, routeDistance, allStops);
+            List<char> allStops = new List<char>();
+            allStops.Add(townIntToChar(startTown));
+            int routeDistance = 0;
+            if(distLessThan > -1){
+                distanceLessThan(routeMatrix, ref allTrainRoutes, startTown, endTown, distLessThan, routeDistance, allStops);
+            } else if (stopsEqTo > -1){
+                stopsEqualTo(routeMatrix, ref allTrainRoutes, startTown, endTown, stopsEqTo, routeDistance, allStops);
+            } else if (stopsLessEqTo > -1){
+                stopsLessThanEqualTo(routeMatrix, ref allTrainRoutes, startTown, endTown, stopsLessEqTo, routeDistance, allStops);
+            } else {
+                Console.WriteLine("This function must be passed a single parameter to specify the type of routes to find.");
+                return null;
             }
-            return allTrainRoutes;
+            return allTrainRoutes; //if allTrainRoutes.Count == 0, then there were no routes found
         }
 
         /// <summary>
-        /// Finds all paths from a given starting town with a max of one repeat of a sigle town. Once a
-        /// town has been seen twice on the route, the function returns.
+        /// TODO WRITE THIS
+        /// </summary>
+        /// <param name="routeMatrix"></param>
+        /// <param name="exactPath"></param>
+        /// <param name="twoTowns"></param>
+        /// <returns></returns>
+        public static int findAllTrainDists(int[,] routeMatrix, int[] exactPath = null, int[] twoTowns = null)
+        {
+            if (exactPath != null)
+            {
+                return findDistGivenExactPath(routeMatrix, exactPath);
+            } else if(twoTowns != null){
+                //TODO write this function!
+                return findDistGivenStartEnd(routeMatrix, 0, exactPath[0], twoTowns);
+            } else {
+                Console.WriteLine("This function must be passed a single parameter to specify the route distance to calculate.");
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Recursive function to fill a list of all routes between two give towns that has
+        /// a number of stops less or equal to the given number, from user input.
         /// </summary>
         /// <param name="routeMatrix">adjacency matrix of towns and distances</param>
         /// <param name="allTrainRoutes">list of all train routes</param>
-        /// <param name="startingTown">char representing starting town</param>
-        /// <param name="currentTown">char representing next town to check</param>
-        /// <param name="hasTownBeenSeen">array indicating which towns have been visited from starting town so far</param>
-        /// <param name="routeDistance">total length of current route</param>
-        /// <param name="allStops">array of all towns along the current route</param>
-        /// <returns>the list of all the train routes</returns>
-        public static List<TrainRoute> findAllPathsFromStartTown(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int startingTown, int currentTown, int[] hasTownBeenSeen, int routeDistance, string allStops)
+        /// <param name="currTown">starting town</param>
+        /// <param name="endTown">goal end town</param>
+        /// <param name="stopsLessEqTo">number of stops that routes should have, either equal to or less than</param>
+        /// <param name="routeDistance">the total distance of the current route (0 to start)</param>
+        /// <param name="allStops">list of all stops that is being filled by this function</param>
+        private static void stopsLessThanEqualTo(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int currTown, int endTown, int stopsLessEqTo, int routeDistance, List<char> allStops)
         {
-            for (int i = currentTown; i < TotalNumberOfTowns; i++)
+            if (allStops.Count > stopsLessEqTo + 1)
             {
-                if (routeMatrix[startingTown, currentTown] != 0) //assuming all routes are > 0 based on problem prompt
+                return; //if there are too many stops in the list for this route, this route will never work
+            }
+            if (townCharToInt(allStops[allStops.Count - 1]) == endTown && allStops.Count <= (stopsLessEqTo + 1))
+            {
+                TrainRoute newRoute = new TrainRoute(allStops, routeDistance);
+                if (!allTrainRoutes.Contains(newRoute))
                 {
-                    routeDistance += routeMatrix[startingTown, currentTown];
-                    allStops += currentTown;
-                    TrainRoute newRoute = new TrainRoute(allStops.ToCharArray(), routeDistance, townIntToChar(startingTown), townIntToChar(currentTown));
                     allTrainRoutes.Add(newRoute);
-                    if (hasTownBeenSeen[currentTown] == 1)
-                    {
-                        return allTrainRoutes;
-                    }
-                    else
-                    {
-                        hasTownBeenSeen[currentTown] = 1;
-                        findAllPathsFromStartTown(routeMatrix, ref allTrainRoutes, startingTown, currentTown++, hasTownBeenSeen, routeDistance, allStops);
-                    }               
                 }
             }
-            return allTrainRoutes;
+            for (int i = 0; i < TotalNumberOfTowns; i++)
+            {
+                if (routeMatrix[currTown, i] != 0) //assuming all routes are > 0 based on problem prompt
+                {
+                    List<char> newAllStops = new List<char>();
+                    int newRouteDistance = routeDistance;
+                    for (int j = 0; j < allStops.Count; j++)
+                    {
+                        newAllStops.Add(allStops[j]);
+                    }
+                    newAllStops.Add(townIntToChar(i));
+                    newRouteDistance += routeMatrix[currTown, i];
+                    stopsLessThanEqualTo(routeMatrix, ref allTrainRoutes, i, endTown, stopsLessEqTo, newRouteDistance, newAllStops);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Recursive function to fill a list of all routes between two give towns that has
+        /// a number of stops equal to the given number, from user input.
+        /// </summary>
+        /// <param name="routeMatrix">adjacency matrix of towns and distances</param>
+        /// <param name="allTrainRoutes">list of all train routes</param>
+        /// <param name="currTown">starting town</param>
+        /// <param name="endTown">goal end town</param>
+        /// <param name="stopsEqTo">exact number of stops that routes should have</param>
+        /// <param name="routeDistance">the total distance of the current route (0 to start)</param>
+        /// <param name="allStops">list of all stops that is being filled by this function</param>
+        private static void stopsEqualTo(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int currTown, int endTown, int stopsEqTo, int routeDistance, List<char> allStops)
+        {
+            if (allStops.Count > stopsEqTo + 1)
+            {
+                return; //if there are too many stops in the list for this route, this route will never work
+            }
+            if (townCharToInt(allStops[allStops.Count - 1]) == endTown && allStops.Count == (stopsEqTo + 1))
+            {
+                TrainRoute newRoute = new TrainRoute(allStops, routeDistance);
+                if (!allTrainRoutes.Contains(newRoute))
+                {
+                    allTrainRoutes.Add(newRoute);
+                }
+                return; //conditions have been met for this route
+            }
+            for (int i = 0; i < TotalNumberOfTowns; i++)
+            {
+                if (routeMatrix[currTown, i] != 0) //assuming all routes are > 0 based on problem prompt
+                {
+                    List<char> newAllStops = new List<char>();
+                    int newRouteDistance = routeDistance;
+                    for (int j = 0; j < allStops.Count; j++)
+                    {
+                        newAllStops.Add(allStops[j]);
+                    }
+                    newAllStops.Add(townIntToChar(i));
+                    newRouteDistance += routeMatrix[currTown, i];
+                    stopsEqualTo(routeMatrix, ref allTrainRoutes, i, endTown, stopsEqTo, newRouteDistance, newAllStops);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Recursive function to find fill a list of all routes with given start and end town with a total 
+        /// distance less than the given.
+        /// </summary>
+        /// <param name="routeMatrix">adjacency matrix of towns and distances</param>
+        /// <param name="allTrainRoutes">list of all train routes</param>
+        /// <param name="currTown">starting town</param>
+        /// <param name="endTown">goal end town</param>
+        /// <param name="distLessThan">distance user wants all routes to be less than</param>
+        /// <param name="routeDistance">the total distance of the current route (0 to start)</param>
+        /// <param name="allStops">list of all stops that is being filled by this function</param>
+        private static void distanceLessThan(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int currTown, int endTown, int distLessThan, int routeDistance, List<char> allStops)
+        {
+            if (routeDistance >= distLessThan)
+            {
+                return; //if there are too many stops in the list for this route, this route will never work
+            }
+            if (routeDistance < distLessThan && currTown == endTown) //(townCharToInt(allStops[allStops.Count - 1]) == endTown && allStops.Count == (stopsEqTo + 1))
+            {
+                TrainRoute newRoute = new TrainRoute(allStops, routeDistance);
+                if (!allTrainRoutes.Contains(newRoute))
+                {
+                    allTrainRoutes.Add(newRoute);
+                }
+                return; //conditions have been met for this route
+            }
+            for (int i = 0; i < TotalNumberOfTowns; i++)
+            {
+                if (routeMatrix[currTown, i] != 0) //assuming all routes are > 0 based on problem prompt
+                {
+                    List<char> newAllStops = new List<char>();
+                    int newRouteDistance = routeDistance;
+                    for (int j = 0; j < allStops.Count; j++)
+                    {
+                        newAllStops.Add(allStops[j]);
+                    }
+                    newAllStops.Add(townIntToChar(i));
+                    newRouteDistance += routeMatrix[currTown, i];
+                    distanceLessThan(routeMatrix, ref allTrainRoutes, i, endTown, distLessThan, newRouteDistance, newAllStops);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the total distance of a given exact train route of towns.
+        /// </summary>
+        /// <param name="routeMatrix">adjacency matrix of towns and distances</param>
+        /// <param name="exactPath">exact path the user wants the distance of</param>
+        /// <returns>distance of the given path</returns>
+        public static int findDistGivenExactPath(int[,] routeMatrix, int[] exactPath = null)
+        {
+            int routeDistance = 0;
+            for (int i = 0; i < exactPath.Length; i++)
+            {
+                if (i < exactPath.Length - 1){
+                    routeDistance += routeMatrix[exactPath[i], exactPath[i + 1]];
+                }
+            }
+            return routeDistance;
+        }
+
+        public static int findDistGivenStartEnd(int[,] routeMatrix, int routeDistance, int currTown, int[] twoTowns = null)
+        {
+            //TODO implement single source shortest path algorithm
+            //may not need to pass in currTown
+            return -1;
         }
 
         /// <summary>
@@ -218,26 +397,53 @@ namespace Trains
         /// Parses the user input for what kind of information they want to have the program return.
         /// </summary>
         /// <param name="userInput">user's console input</param>
-        public static void parseUserInput(string userInput)
+        public static char parseUserInput(string userInput, ref List<char> inputTowns, ref int numberUserPasses)
         {
-            if (userInput.Contains(ShortestRoute.ToLower()))
+        //private const string ShortestRoute = "s";
+        //private const string DistanceLessThan = "l";
+        //private const string MaxNumberStops = "m";
+        //private const string ExactNumberStops = "x";
+        //private const char ExactPath = 'p';
+            string pattern = @"[A-Ea-e]+"; //at least one characer between A-E, case insensitive
+            int numUserPasses;
+            char typeOfOutputToGive;
+
+            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+            MatchCollection matches = rgx.Matches(userInput);
+            char[] matchingTownLetters = new char[matches.Count];
+            if (matches.Count > 0)
             {
+                matches.CopyTo(matchingTownLetters, 0); //copies town letters into a char array
+                foreach(char town in matchingTownLetters){
+                    inputTowns.Add(town);
+                }
+                //foreach (Match match in matches){}
+            }
+
+            //char[] userInputArray = userInput.ToCharArray();
+            if (userInput.Contains(ShortestRoute))
+            {
+                typeOfOutputToGive = ShortestRoute.ToCharArray()[0];
+                
+            }
+            else if (userInput.ToLower().Contains(DistanceLessThan))
+            {
+                typeOfOutputToGive = DistanceLessThan.ToCharArray()[0];
+                Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+            }
+            else if (userInput.ToLower().Contains(MaxNumberStops))
+            {
+                typeOfOutputToGive = MaxNumberStops.ToCharArray()[0];
+                Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+            }
+            else if (userInput.ToLower().Contains(ExactNumberStops))
+            {
+                typeOfOutputToGive = ExactNumberStops.ToCharArray()[0];
 
             }
-            else if (userInput.Contains(DistanceLessThan.ToLower()))
+            else if (userInput.Length == 3 && userInputArray[1] == '-')
             {
-
-            }
-            else if (userInput.Contains(MaxNumberStops.ToLower()))
-            {
-
-            }
-            else if (userInput.Contains(ExactNumberStops.ToLower()))
-            {
-
-            }
-            else if (userInput.Length == 3 && userInput.Contains("-"))
-            {
+                typeOfOutputToGive = 
 
             }
             else //exact route (A-B-C etc.) or error
