@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using Trains;
 
 namespace TrainTests
@@ -109,23 +110,128 @@ namespace TrainTests
         }
 
         [TestMethod]
+        public void RoutePlanner_FindAllTrainRoutes()
+        {
+            int[,] routeMatrix = new int[5,5];
+            routeMatrix[0, 1] = 3;
+            routeMatrix[1, 2] = 40;
+            routeMatrix[2, 3] = 8;
+            routeMatrix[3, 2] = 8;
+            routeMatrix[2, 0] = 5;
+            routeMatrix[0, 3] = 20;
+            List<TrainRoute> allRoutes;
+
+            //unit testing of distanceLessThan()
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 10); 
+            Assert.AreEqual(0, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 45);
+            Assert.AreEqual(1, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 51);
+            Assert.AreEqual(1, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 60);
+            Assert.AreEqual(2, allRoutes.Count);
+
+            //unit testing of stopsEqualTo()
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsEqTo: 1);
+            Assert.AreEqual(1, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsEqTo: 2);
+            Assert.AreEqual(0, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsEqTo: 3);
+            Assert.AreEqual(2, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsEqTo: 4);
+            Assert.AreEqual(2, allRoutes.Count);
+
+            //unit tests for stopsLessThanEqualTo()
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsLessEqTo: 1);
+            Assert.AreEqual(1, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsLessEqTo: 2);
+            Assert.AreEqual(1, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsLessEqTo: 3);
+            Assert.AreEqual(3, allRoutes.Count);
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, stopsLessEqTo: 4);
+            Assert.AreEqual(5, allRoutes.Count);
+        }
+
+        [TestMethod]
+        public void RoutePlanner_FindAllTrainDists()
+        {
+            //findAllTrainDists(int[,] routeMatrix, int[] exactPath = null, int[] twoTowns = null)
+            int[,] routeMatrix = new int[5, 5];
+            routeMatrix[0, 1] = 3;
+            routeMatrix[1, 2] = 40;
+            routeMatrix[2, 3] = 8;
+            routeMatrix[3, 2] = 8;
+            routeMatrix[2, 0] = 5;
+            routeMatrix[0, 3] = 20;
+            int distance;
+
+            //unit tests for findDistGivenExactPath()
+            int[] exactRouteA = {0, 1, 2, 3};
+            distance = RoutePlanner.findAllTrainDists(routeMatrix, exactPath: exactRouteA);
+            Assert.AreEqual(51, distance);
+
+            int[] exactRouteB = { 0, 1, 2, 0 };
+            distance = RoutePlanner.findAllTrainDists(routeMatrix, exactPath: exactRouteB);
+            Assert.AreEqual(48, distance);
+
+            //unit tests for findDistGivenStartEnd()
+        }
+
+        [TestMethod]
         public void TrainRoute_ToString()
         {
-            char[] allStops = {'A', 'B', 'E', 'B'};
+            List<char> allStops = new List<char>();
+            allStops.Add('A');
+            allStops.Add('B');
+            allStops.Add('E');
+            allStops.Add('B');
             int distance = 27;
             char start = 'A';
             char end = 'B';
 
-            TrainRoute route = new TrainRoute(allStops, distance, start, end);
-            Console.WriteLine(route.toString());
+            TrainRoute routeA = new TrainRoute(allStops, distance, start, end);
+            Console.WriteLine(routeA.toString());
             string expected = "starting town: " + start + " | ending town: " + end + " | all stops on route: "; 
-            for (int i = 0; i < allStops.Length; i++)
+            for (int i = 0; i < allStops.Count; i++)
             {
                 expected += allStops[i];
             }
             expected += " | total distance: " + distance;
+            Assert.AreEqual(expected, routeA.toString(), "Actual output from toString does not match expected output.");
 
-            Assert.AreEqual(expected, route.toString(), "Actual output from toString does not match expected output.");
+            TrainRoute routeB = new TrainRoute(allStops, distance);
+            Console.WriteLine(routeB.toString());
+            expected = "starting town: " + start + " | ending town: " + end + " | all stops on route: ";
+            for (int i = 0; i < allStops.Count; i++)
+            {
+                expected += allStops[i];
+            }
+            expected += " | total distance: " + distance;
+            Assert.AreEqual(expected, routeB.toString(), "Actual output from toString does not match expected output.");
+        }
+
+        [TestMethod]
+        public void TrainRoute_Equals()
+        {
+            List<char> stops = new List<char>();
+            stops.Add('A');
+            stops.Add('B');
+            stops.Add('C');
+            int dist = 23;
+            TrainRoute first = new TrainRoute(stops, dist);
+            TrainRoute second = new TrainRoute(stops, dist);
+            Assert.IsTrue(first.Equals(second));
+
+            List<char> diffStops = new List<char>();
+            diffStops.Add('A');
+            diffStops.Add('C');
+            diffStops.Add('B');
+            TrainRoute third = new TrainRoute(diffStops, dist);
+            Assert.IsFalse(first.Equals(third));
+
+            int diffDist = 25;
+            TrainRoute fourth = new TrainRoute(diffStops, diffDist);
+            Assert.IsFalse(first.Equals(fourth));
         }
     }
 }
