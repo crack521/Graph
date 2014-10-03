@@ -112,7 +112,7 @@ namespace TrainTests
         [TestMethod]
         public void RoutePlanner_FindAllTrainRoutes()
         {
-            int[,] routeMatrix = new int[5,5];
+            int[,] routeMatrix = new int[5, 5];
             routeMatrix[0, 1] = 3;
             routeMatrix[1, 2] = 40;
             routeMatrix[2, 3] = 8;
@@ -122,7 +122,7 @@ namespace TrainTests
             List<TrainRoute> allRoutes;
 
             //unit testing of distanceLessThan()
-            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 10); 
+            allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 10);
             Assert.AreEqual(0, allRoutes.Count);
             allRoutes = RoutePlanner.findAllTrainRoutes(routeMatrix, 0, 3, distLessThan: 45);
             Assert.AreEqual(1, allRoutes.Count);
@@ -163,18 +163,24 @@ namespace TrainTests
             routeMatrix[3, 2] = 8;
             routeMatrix[2, 0] = 5;
             routeMatrix[0, 3] = 20;
-            int distance;
+            string distance;
 
             //unit tests for findDistGivenExactPath()
             int[] exactRouteA = {0, 1, 2, 3};
             distance = RoutePlanner.findAllTrainDists(routeMatrix, exactPath: exactRouteA);
-            Assert.AreEqual(51, distance);
+            Assert.AreEqual(51, Int32.Parse(distance));
 
             int[] exactRouteB = { 0, 1, 2, 0 };
             distance = RoutePlanner.findAllTrainDists(routeMatrix, exactPath: exactRouteB);
-            Assert.AreEqual(48, distance);
+            Assert.AreEqual(48, Int32.Parse(distance));
 
-            //unit tests for findDistGivenStartEnd()
+            //TODO write unit tests for findDistGivenStartEnd()
+        }
+
+        [TestMethod]
+        public void RoutePlanner_ParseUserInput() //string userInput, ref List<char> inputTowns, ref int numberUserPasses)
+        {
+
         }
 
         [TestMethod]
