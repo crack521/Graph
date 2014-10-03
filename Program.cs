@@ -37,12 +37,12 @@ namespace Trains
                 numberUserPasses = 0;
                 userInput = Console.ReadLine();
                 typeOfOutputToGive = parseUserInput(userInput, ref inputTowns, ref numberUserPasses);
-                char[] townsAsChars = inputTowns.ToArray();
+                char[] townsAsChars = inputTowns.ToArray(); 
                 int[] townsAsInts = new int[townsAsChars.Length];
                 for (int i = 0; i < townsAsChars.Length; i++)
                 {
                     townsAsInts[i] = townCharToInt(townsAsChars[i]);
-                } //builds an int array of all the towns user specifies to be used for indecies in the adj. matrix
+                } //builds an int array of all the towns user specifies to be used for indecies in the adj. matrix (converted to correct ints)
 
                 if (typeOfOutputToGive.ToString() == ExactNumberStops){
                     rts = findAllTrainRoutes(routeMatrix, inputTowns[0], inputTowns[inputTowns.Count - 1], stopsEqTo: numberUserPasses); 
@@ -230,10 +230,10 @@ namespace Trains
             string infoToPrint;
             if (exactPath != null)
             {
-                infoToPrint = findDistGivenExactPath(routeMatrix, exactPath);
+                infoToPrint = findDistGivenExactPath(routeMatrix, exactPath); //ExactPath
             } else if(twoTowns != null){
                 //TODO write this function!
-                infoToPrint = findDistGivenStartEnd(routeMatrix, 0, exactPath[0], twoTowns);
+                infoToPrint = findDistGivenStartEnd(routeMatrix, 0, exactPath[0], twoTowns); //ShortestRoute
             } else {
                 Console.WriteLine("This function must be passed a single parameter to specify the route distance to calculate.");
                 return null;
@@ -414,31 +414,39 @@ namespace Trains
         }
 
         /// <summary>
-        /// Parses the user input for what kind of information they want to have the program return.
+        /// Parses user's input. Returned char corresponds to one of the five char (or string) class constants
+        /// in this class. If there was an error a ' ' char is returned.
+        /// Also finds all town chars the user gives for the route and adds them to inputTowns and finds any
+        /// numbers that the user gives for distance, stops, etc and adds it to numberUserPasses.
+        /// (All numbers found in the input string will be concatonated together into one int!)
         /// </summary>
-        /// <param name="userInput">user's console input</param>
+        /// <param name="userInput">char representing type of output user wants</param>
+        /// <param name="inputTowns">list of towns (as letters) the user wants in their route</param>
+        /// <param name="numberUserPasses">char representing type of ourput user wants.</param>
+        /// <returns></returns>
         public static char parseUserInput(string userInput, ref List<char> inputTowns, ref int numberUserPasses)
         {
             //TODO break this up into three methods, for finding the towns, the number, and the type of data
+            //TODO add quit option; if user enters Q, quit, etc, in main the program should exit the while loop
             char typeOfOutputToGive;
 
             string townPattern = @"[A-Ea-e]+"; //at least one characer between A-E, case insensitive
             Regex rgx = new Regex(townPattern, RegexOptions.IgnoreCase);
             MatchCollection matches = rgx.Matches(userInput);
-            char[] matchingTownLetters = new char[matches.Count]; //makes char[] for all towns user inputs
             if (matches.Count > 0)
             {
-                matches.CopyTo(matchingTownLetters, 0); //copies town letters into a char array, in order of input
-                foreach(char town in matchingTownLetters){
-                    inputTowns.Add(town); //copies the towns to the list reference
+                foreach(Match mtchs in matches){
+                    inputTowns.Add(char.Parse(mtchs.ToString())); //copies the towns to the list reference
                 }
             } else {
                 return ' '; //no towns found, error message given in main()
             }
 
             string resultString = string.Join(string.Empty, Regex.Matches(userInput, @"\d+").OfType<Match>().Select(m => m.Value));
-            //this gets every digit from user's input and puts it into a string
-            numberUserPasses = Int32.Parse(resultString); 
+            //this gets every digit from user's input and puts it into a string (I didn't create it)
+            if (!resultString.Equals("")) {
+                numberUserPasses = Int32.Parse(resultString);
+            }
 
             //find what kind of data the user wants
             if (userInput.Contains(ShortestRoute))
@@ -461,8 +469,7 @@ namespace Trains
             {
                 typeOfOutputToGive = ExactPath;
             }
-            else //exact route (A-B-C etc.) or error
-            {
+            else {
                 Console.WriteLine("An error occured. Please enter a character that represents the type of data you need.");
                 typeOfOutputToGive = ' ';
             }
