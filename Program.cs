@@ -51,19 +51,20 @@ namespace Trains
                 } else if (typeOfOutputToGive.ToString() == DistanceLessThan){
                     rts = findAllTrainRoutes(routeMatrix, inputTowns[0], inputTowns[inputTowns.Count - 1], distLessThan: numberUserPasses); 
                 } else if (typeOfOutputToGive.ToString() == ShortestRoute){
-                    infoToPrint = findAllTrainDists(routeMatrix, twoTowns: townsAsInts); 
+                    infoToPrint = findAllTrainDists(routeMatrix, startAndEndTown: townsAsInts); 
                 } else if (typeOfOutputToGive == ExactPath){
                     infoToPrint = findAllTrainDists(routeMatrix, exactPath: townsAsInts);
                 }
                 else
                 {
-                    infoToPrint = "An error occured. Please enter valid route information.";
+                    infoToPrint = "NO SUCH ROUTE";
                 }
 
                 if (rts != null ) 
                 {
                     infoToPrint = rts.Count.ToString(); 
                 }
+
                 Console.WriteLine(infoToPrint);
             }
         }
@@ -219,21 +220,21 @@ namespace Trains
         }
 
         /// <summary>
-        /// TODO WRITE THIS SUMMARY
+        /// Constructs a string with the distance that user wants to know based on input of either
+        /// an int array, exactPath or startAndEndTown
         /// </summary>
-        /// <param name="routeMatrix"></param>
-        /// <param name="exactPath"></param>
-        /// <param name="twoTowns"></param>
-        /// <returns></returns>
-        public static string findAllTrainDists(int[,] routeMatrix, int[] exactPath = null, int[] twoTowns = null)
+        /// <param name="routeMatrix">adjacency matrix of train routes and weights</param>
+        /// <param name="exactPath">int representations of all towns that should be visited</param>
+        /// <param name="twoTowns">int representation of start and end town that should be visited</param>
+        /// <returns>string representation of an int showing the distance of the path the user wants to find</returns>
+        public static string findAllTrainDists(int[,] routeMatrix, int[] exactPath = null, int[] startAndEndTown = null)
         {
             string infoToPrint;
             if (exactPath != null)
             {
                 infoToPrint = findDistGivenExactPath(routeMatrix, exactPath); //ExactPath
-            } else if(twoTowns != null){
-                //TODO write this function!
-                infoToPrint = findDistGivenStartEnd(routeMatrix, 0, exactPath[0], twoTowns); //ShortestRoute
+            } else if(startAndEndTown != null){
+                infoToPrint = findDistGivenStartEnd(routeMatrix, startAndEndTown); //ShortestRoute
             } else {
                 Console.WriteLine("This function must be passed a single parameter to specify the route distance to calculate.");
                 return null;
@@ -336,14 +337,14 @@ namespace Trains
         /// <param name="endTown">goal end town</param>
         /// <param name="distLessThan">distance user wants all routes to be less than</param>
         /// <param name="routeDistance">the total distance of the current route (0 to start)</param>
-        /// <param name="allStops">list of all stops that is being filled by this function</param>
+        /// <param name="allStops">list of all stops that is being filled by this function (empty to start)</param>
         private static void distanceLessThan(int[,] routeMatrix, ref List<TrainRoute> allTrainRoutes, int currTown, int endTown, int distLessThan, int routeDistance, List<char> allStops)
         {
             if (routeDistance >= distLessThan)
             {
                 return; //if there are too many stops in the list for this route, this route will never work
             }
-            if (routeDistance < distLessThan && currTown == endTown) //(townCharToInt(allStops[allStops.Count - 1]) == endTown && allStops.Count == (stopsEqTo + 1))
+            if (routeDistance < distLessThan && currTown == endTown) 
             {
                 TrainRoute newRoute = new TrainRoute(allStops, routeDistance);
                 if (!allTrainRoutes.Contains(newRoute))
@@ -358,9 +359,9 @@ namespace Trains
                 {
                     List<char> newAllStops = new List<char>();
                     int newRouteDistance = routeDistance;
-                    for (int j = 0; j < allStops.Count; j++)
+                    foreach(char stop in allStops) //(int j = 0; j < allStops.Count; j++)
                     {
-                        newAllStops.Add(allStops[j]);
+                        newAllStops.Add(stop);
                     }
                     newAllStops.Add(townIntToChar(i));
                     newRouteDistance += routeMatrix[currTown, i];
@@ -387,12 +388,31 @@ namespace Trains
             return routeDistance.ToString();
         }
 
-        public static string findDistGivenStartEnd(int[,] routeMatrix, int routeDistance, int currTown, int[] twoTowns = null)
+        /// <summary>
+        /// Finds all paths with a distance less than 500 then searches them to find the path with the shortest route.
+        /// 
+        /// Optimization: with more time, this function would have been written to be an implementation of Dikjstra's 
+        /// shortest path algorithm with a sigle source and destination. This also should not make an assumtion for 
+        /// route distances, but given the sample input data for the problem, 500 can be assumed to be a safe number
+        /// for now.
+        /// </summary>
+        /// <param name="routeMatrix">adjacency matrix of towns and distances</param>
+        /// <param name="startAndEndTown">int array where [0] holds start town and [1] holds end town</param>
+        /// <returns>string representation of the distance of the shortest path found</returns>
+        public static string findDistGivenStartEnd(int[,] routeMatrix, int[] startAndEndTown)
         {
-            int routeDist = 0;
-            //TODO implement single source shortest path algorithm
-            //may not need to pass in currTown
-            return routeDist.ToString(); //distance of the shortest path found
+            List<TrainRoute> possibleRoutes = new List<TrainRoute>(); //gets filled with all eligible routes
+            List<char> allStops = new List<char>();
+            distanceLessThan(routeMatrix, ref possibleRoutes, startAndEndTown[0], startAndEndTown[1], 500, 0, allStops);
+            int shortestPath = int.MaxValue;
+            foreach (TrainRoute route in possibleRoutes) //find shortest path of all returned paths
+            { 
+                if (route.getDistance() < shortestPath)
+                {
+                    shortestPath = route.getDistance();
+                }
+            }
+            return shortestPath.ToString(); //distance of the shortest path found
         }
 
         /// <summary>
