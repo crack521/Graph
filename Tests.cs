@@ -155,7 +155,6 @@ namespace TrainTests
         [TestMethod]
         public void RoutePlanner_FindAllTrainDists()
         {
-            //findAllTrainDists(int[,] routeMatrix, int[] exactPath = null, int[] twoTowns = null)
             int[,] routeMatrix = new int[5, 5];
             routeMatrix[0, 1] = 3;
             routeMatrix[1, 2] = 40;
@@ -174,7 +173,18 @@ namespace TrainTests
             distance = RoutePlanner.findAllTrainDists(routeMatrix, exactPath: exactRouteB);
             Assert.AreEqual(48, Int32.Parse(distance));
 
-            //TODO write unit tests for findDistGivenStartEnd()
+            //unit tests for findDistGivenStartEnd()
+            int[] startAndEndTownA = {2, 0};
+            distance = RoutePlanner.findDistGivenStartEnd(routeMatrix, startAndEndTownA);
+            Assert.AreEqual(5, Int32.Parse(distance));
+
+            int[] startAndEndTownB = { 1, 0 };
+            distance = RoutePlanner.findDistGivenStartEnd(routeMatrix, startAndEndTownB);
+            Assert.AreEqual(45, Int32.Parse(distance));
+
+            int[] startAndEndTownC = { 2, 3 };
+            distance = RoutePlanner.findDistGivenStartEnd(routeMatrix, startAndEndTownC);
+            Assert.AreEqual(8, Int32.Parse(distance));
         }
 
         [TestMethod]
