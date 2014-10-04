@@ -123,6 +123,8 @@ namespace Trains
                 return Equals(route);
         }   
 
+        //TODO implement override Object.GetHashCode()
+
         /// <summary>
         /// Function to determine if two TrainRoute objects are equal using ==
         /// </summary>
