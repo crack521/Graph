@@ -295,5 +295,6 @@ namespace TrainTests
             Assert.IsFalse(first.Equals(fourth));
         }
     }
+    
 }
 
