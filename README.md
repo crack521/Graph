@@ -26,7 +26,7 @@ example: C-C l 30
 s- finds the shortest route between two given towns
 examples: A-C s; B-B s 
 
-Optimizations and Things to Improve:
+3. Optimizations and Things to Improve:
 
 Comments in files for assumtions and TODO statements of some of the 
 optimizations I would have liked to make to this program given more time. Besides the
