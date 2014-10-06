@@ -26,5 +26,16 @@ example: C-C l 30
 s- finds the shortest route between two given towns
 examples: A-C s; B-B s 
 
+Optimizations and Things to Improve:
+
+Comments in files for assumtions and TODO statements of some of the 
+optimizations I would have liked to make to this program given more time. Besides the
+ones noted, such as implementing Dijkstra's single-source shortest path algorithm
+for finding the shortest path between two towns, the main things I would have liked
+to improve would be splitting up the unit tests and user input parsing function into
+smaller functions, creating objects to pass parameters into the functions that 
+calculate results to simplify them, and optimising the townCharToInt() and 
+townIntToChar() functions by converting them into hash tables, and a few other things.
+
 
 
